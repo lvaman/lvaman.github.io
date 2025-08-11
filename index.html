@@ -40,11 +40,11 @@
 
     <div class="main-container">
         <div id="groom-guests" class="guest-list drop-zone">
-            <h2>Long Vân</h2>
+            <h2>Long Vân<br><span id="groom-list-counter"></span></h2>
         </div>
 
         <div id="bride-guests" class="guest-list drop-zone">
-            <h2>Manal</h2>
+            <h2>Manal<br><span id="bride-list-counter"></span></h2>
         </div>
 
         <div id="tables-container"></div>
@@ -82,7 +82,6 @@
             ];
 
             async function initializeBoard() {
-                // Création des listes de tables et d'invités
                 groomListContainer.innerHTML = '<h2>Long Vân<br><span id="groom-list-counter"></span></h2>';
                 brideListContainer.innerHTML = '<h2>Manal<br><span id="bride-list-counter"></span></h2>';
                 tablesContainer.innerHTML = '';
@@ -94,7 +93,6 @@
                     brideListContainer.innerHTML += `<div class="guest bride" id="bride-${index}" draggable="true">${name}</div>`;
                 });
 
-                // Création de la table d'honneur
                 const headTableCapacity = 2;
                 tablesContainer.innerHTML += `
                     <div class="table-drop-zone drop-zone" id="table-head" data-capacity="${headTableCapacity}">
@@ -103,7 +101,6 @@
                         <div class="table-guests-container"></div>
                     </div>`;
 
-                // Création des 11 autres tables
                 const numberOfTables = 11;
                 const tableCapacity = 10;
                 for (let i = 1; i <= numberOfTables; i++) {
@@ -115,7 +112,6 @@
                         </div>`;
                 }
         
-                // Chargement depuis Firebase
                 await loadFromFirebase();
         
                 allGuests = document.querySelectorAll('.guest');
@@ -165,9 +161,36 @@
                 allDropZones.forEach(zone => {
                     zone.addEventListener('dragover', e => {
                         e.preventDefault();
+                        const id = e.dataTransfer.getData('text/plain');
+                        const draggableElement = document.getElementById(id);
+                        if (!draggableElement) return;
+        
+                        const isGroomGuest = draggableElement.classList.contains('groom');
+                        const isBrideGuest = draggableElement.classList.contains('bride');
+        
+                        // La logique de restriction est simplifiée car il n'y a plus de sous-listes
+                        if (zone.id === 'groom-guests' && isBrideGuest) {
+                            e.dataTransfer.dropEffect = 'none';
+                            return;
+                        }
+                        if (zone.id === 'bride-guests' && isGroomGuest) {
+                            e.dataTransfer.dropEffect = 'none';
+                            return;
+                        }
+        
+                        e.dataTransfer.dropEffect = 'move';
+        
                         const capacity = parseInt(zone.dataset.capacity) || Infinity;
-                        const currentCount = zone.querySelector('.table-guests-container') ? zone.querySelector('.table-guests-container').querySelectorAll('.guest').length : zone.querySelectorAll('.guest').length;
-                        zone.classList.toggle('table-full', currentCount >= capacity);
+                        const currentCount = zone.querySelector('.table-guests-container') ? zone.querySelector('.table-guests-container').querySelectorAll('.guest:not(.is-dragging)').length : zone.querySelectorAll('.guest:not(.is-dragging)').length;
+
+                        if (zone.classList.contains('table-drop-zone') && currentCount >= capacity) {
+                            zone.classList.add('table-full');
+                            e.dataTransfer.dropEffect = 'none';
+                            return;
+                        } else {
+                            zone.classList.remove('table-full');
+                        }
+        
                         zone.classList.add('drag-over');
                     });
                     zone.addEventListener('dragleave', () => zone.classList.remove('drag-over', 'table-full'));
@@ -177,7 +200,14 @@
                         const id = e.dataTransfer.getData('text/plain');
                         const draggableElement = document.getElementById(id);
                         if (!draggableElement) return;
+
+                        const isGroomGuest = draggableElement.classList.contains('groom');
+                        const isBrideGuest = draggableElement.classList.contains('bride');
         
+                        if ((zone.id === 'groom-guests' && isBrideGuest) || (zone.id === 'bride-guests' && isGroomGuest)) {
+                            return;
+                        }
+
                         if (zone.classList.contains('table-drop-zone')) {
                             const capacity = parseInt(zone.dataset.capacity);
                             const currentCount = zone.querySelector('.table-guests-container').querySelectorAll('.guest').length;
@@ -186,11 +216,12 @@
                                 saveToFirebase();
                             }
                         } else {
-                            const afterElement = getDragAfterElement(zone, e.clientY);
+                            const container = zone;
+                            const afterElement = getDragAfterElement(container, e.clientY);
                             if (afterElement == null) {
-                                zone.appendChild(draggableElement);
+                                container.appendChild(draggableElement);
                             } else {
-                                zone.insertBefore(draggableElement, afterElement);
+                                container.insertBefore(draggableElement, afterElement);
                             }
                             saveToFirebase();
                         }
@@ -208,7 +239,6 @@
                     }
                 });
 
-                // Inclure les listes d'invités non placés
                 seating['groom-guests'] = [...groomListContainer.querySelectorAll('.guest')].map(guest => guest.id);
                 seating['bride-guests'] = [...brideListContainer.querySelectorAll('.guest')].map(guest => guest.id);
                 
@@ -241,7 +271,6 @@
             }
         
             function loadConfiguration(config) {
-                // Déplacer les invités vers leurs tables
                 Object.keys(config).forEach(zoneId => {
                     const zoneElement = document.getElementById(zoneId);
                     if (zoneElement) {
@@ -249,9 +278,9 @@
                             const guestElement = document.getElementById(guestId);
                             if (guestElement) {
                                 if (zoneElement.classList.contains('table-drop-zone')) {
-                                     zoneElement.querySelector('.table-guests-container').appendChild(guestElement);
+                                    zoneElement.querySelector('.table-guests-container').appendChild(guestElement);
                                 } else {
-                                     zoneElement.appendChild(guestElement);
+                                    zoneElement.appendChild(guestElement);
                                 }
                             }
                         });
