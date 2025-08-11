@@ -4,147 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan de table</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background-color: #fdfaf6;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
+    <link rel="stylesheet" href="style.css">
 
-        .header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            color: #5d4037;
-        }
-
-        #master-counter {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #c89f70;
-        }
-        
-        /* --- Buttons for Save/Load --- */
-        .controls {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .btn {
-            background-color: #5d4037;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            margin: 0 5px;
-            transition: background-color 0.2s;
-        }
-
-        .btn:hover {
-            background-color: #795548;
-        }
-
-        /* --- Main Layout --- */
-        .main-container {
-            display: grid;
-            grid-template-columns: 220px 220px 1fr;
-            gap: 20px;
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        /* --- Guest Lists --- */
-        .guest-list {
-            background-color: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            height: 75vh;
-            overflow-y: auto;
-        }
-
-        .guest-list h2 {
-            text-align: center;
-            margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
-        }
-
-        .guest {
-            padding: 8px 12px;
-            margin: 5px 0;
-            border-radius: 5px;
-            cursor: grab;
-            transition: background-color 0.3s, opacity 0.2s;
-            font-size: 0.9em;
-            color: white;
-            font-weight: 500;
-            user-select: none;
-        }
-        
-        .groom { background-color: #4a6c8c; }
-        .bride { background-color: #c89f70; }
-
-        .guest:active { cursor: grabbing; }
-        
-        /* --- Tables Area --- */
-        #tables-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 15px;
-        }
-
-        .table-drop-zone {
-            background-color: #ffffff;
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 10px;
-            min-height: 250px;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .table-drop-zone h3 {
-            text-align: center;
-            margin: 0 0 10px 0;
-            font-size: 1em;
-            color: #666;
-        }
-        
-        .table-counter {
-            text-align: center;
-            font-weight: bold;
-            color: #888;
-            margin-bottom: 10px;
-            display: block;
-        }
-        
-        .is-dragging { opacity: 0.5; }
-        .drag-over { border-color: #64b5f6; background-color: #e3f2fd; }
-        .table-full { border-color: #e57373; }
-        
-    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+    
+        // Votre configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPCMCi4BB2dySCc8G4adLYQXJSk-903v0",
+            authDomain: "weddingchart.firebaseapp.com",
+            projectId: "weddingchart",
+            storageBucket: "weddingchart.firebasestorage.app",
+            messagingSenderId: "345074315998",
+            appId: "1:345074315998:web:ae600053bcbe04a977884f"
+        };
+    
+        // Initialisation de Firebase
+        const app = initializeApp(firebaseConfig);
+    
+        // Rendre l'instance de la base de données et les fonctions accessibles globalement
+        window.db = getFirestore(app);
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.collection = collection;
+    </script>
 </head>
 <body>
 
     <div class="header">
         <h1>Plan de table 👩‍❤️‍👨</h1>
         <p>Invités placés: <span id="master-counter">0/0</span></p>
-    </div>
-
-    <div class="controls">
-        <button id="save-btn" class="btn">💾 Enregistrer</button>
-        <button id="import-btn" class="btn">📂 Importer</button>
-        <input type="file" id="import-file" accept=".json" style="display: none;">
     </div>
 
     <div class="main-container">
@@ -160,34 +51,60 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const groomGuestsData = ['Cau 3', 'Cau 4', 'Mo 4', 'Maman', 'Papa', 'Cau 7', 'Cau 8', 'Mo 8', 'Di Ut', 'Chi Na', 'Jimmy', 'Chi Thy', 'Chi Thu', 'Anh Hieu', 'Thao', 'Kien', 'Danny', 'Julia', 'Nam', 'Co Hong Minh', 'Bo Xi', 'Idriss', 'Yasmine', 'Marc-Olivier', 'Aude', 'Ong Mien', 'Co Mai Dung', 'Clément', 'Matis', 'Co Hoa Dung', 'Benjamin', 'Amandine', 'Timothe', 'Margaux', 'Chu Tran', 'Virginie', 'Emilien', 'Flora', 'Co Be', 'Chu Vu', 'Léo', 'Mai-Lan', 'Bao', 'Zakaria', 'Tristan', 'Hadrien', 'Ines', 'Louis', 'Virgile', 'Uyen-My', 'Ong 6', 'Ba 6'];
-            const brideGuestsData = ['Léa Coache', 'Adrien Prevost', 'Axel Derrien', 'Claire Tualle', 'Charly', 'Shelsy Audouard', 'Taqwa', 'Sumeyra Solak', 'Hatice Solak', 'Dalia Solak', 'Henene Mestari', 'Derghal Amira', 'Yannis messaoud', 'Derghal Yanis', 'Derghal Ryad', 'Derghal Nadir', 'Derghal Salima', 'Derghal Wissem', 'Derghal Sanaa', 'Lakehal Ibtihal', 'Younes mari ibtihal', 'Lakeha Rihem', 'Lakehal Bachir', 'Lakehal Yasmina', 'Kamal', 'Amine', 'Elimane', 'Jordan', 'Luca', 'Zoe', 'Dounia', 'Karim', 'Tata Hiba', 'Masraf Amina', 'Masraf Nadir', 'Adra', 'Fethi', 'Fatima', '3aziz', 'Khali jilali', 'Sorya', 'Salhi Amina + Iyed', 'Amine', 'Brahim', 'Fatema', 'M Yannis', 'P Yannis'];
-
+        document.addEventListener('DOMContentLoaded', async () => {
             const groomListContainer = document.getElementById('groom-guests');
             const brideListContainer = document.getElementById('bride-guests');
             const tablesContainer = document.getElementById('tables-container');
             const masterCounterEl = document.getElementById('master-counter');
-            const saveBtn = document.getElementById('save-btn');
-            const importBtn = document.getElementById('import-btn');
-            const importFileEl = document.getElementById('import-file');
-
+        
             let allGuests, allDropZones, totalGuests;
+            const db = window.db;
 
-            function initializeBoard() {
-                // Clear existing elements before populating
+            // Listes d'invités directement dans le script
+            const initialGroomGuestsData = [
+                "Long Vân",
+                "Cau 3", "Cau 4", "Cau 7", "Cau 8",
+                "Mo 4", "Mo 8", "Di Ut",
+                "Má", "Na", "Thy", "Thu", "Jimmy",
+                "Hieu", "Thao", "Kien", "Danny", "Julia", "Nam",
+                "Ba", "Hong Minh", "Bo Xi",
+                "Ong Mien", "Mai Dung", "Clément", "Matis",
+                "Hoa Dung", "Benjamin", "Amandine", "Timothe", "Margaux",
+                "Chu Tran", "Virginie", "Emilien", "Flora",
+                "Co Be", "Chu Vu", "Ong 6", "Ba 6", "Ba Sang", "Ong Quyen",
+                "Idriss", "Marc-Olivier", "Yasmine", "Aude", "Tristan",
+                "Léo", "Mai-Lan", "Uyen-My", "Bao", "Hadrien", "Ines", "Louis", "Virgile", "Zakaria"
+            ];
+            const initialBrideGuestsData = [
+                "Manal",
+                "Dounia", "Karim", "Tata Hiba", "Masraf Amina", "Masraf Nadir", "Adra", "Fethi", "Fatima", "3aziz", "Khali jilali", "Sorya", "Salhi Amina + Iyed", "Amine", "Brahim", "Fatema", "M Yannis", "P Yannis",
+                "Léa Coache", "Adrien Prevost", "Axel Derrien", "Claire Tualle", "Charly", "Shelsy Audouard", "Taqwa", "Sumeyra Solak", "Hatice Solak", "Dalia Solak", "Henene Mestari", "Derghal Amira", "Yannis messaoud", "Derghal Yanis", "Derghal Ryad", "Derghal Nadir", "Derghal Salima", "Derghal Wissem", "Derghal Sanaa", "Lakehal Ibtihal", "Younes mari ibtihal", "Lakeha Rihem", "Lakehal Bachir", "Lakehal Yasmina", "Kamal", "Amine", "Elimane", "Jordan", "Luca", "Zoe"
+            ];
+
+            async function initializeBoard() {
+                // Création des listes de tables et d'invités
                 groomListContainer.innerHTML = '<h2>Long Vân<br><span id="groom-list-counter"></span></h2>';
                 brideListContainer.innerHTML = '<h2>Manal<br><span id="bride-list-counter"></span></h2>';
                 tablesContainer.innerHTML = '';
-
-                groomGuestsData.forEach((name, index) => {
+        
+                initialGroomGuestsData.forEach((name, index) => {
                     groomListContainer.innerHTML += `<div class="guest groom" id="groom-${index}" draggable="true">${name}</div>`;
                 });
-                brideGuestsData.forEach((name, index) => {
+                initialBrideGuestsData.forEach((name, index) => {
                     brideListContainer.innerHTML += `<div class="guest bride" id="bride-${index}" draggable="true">${name}</div>`;
                 });
 
-                const numberOfTables = 10;
+                // Création de la table d'honneur
+                const headTableCapacity = 2;
+                tablesContainer.innerHTML += `
+                    <div class="table-drop-zone drop-zone" id="table-head" data-capacity="${headTableCapacity}">
+                        <h3>Table d'honneur</h3>
+                        <span class="table-counter">0 / ${headTableCapacity}</span>
+                        <div class="table-guests-container"></div>
+                    </div>`;
+
+                // Création des 11 autres tables
+                const numberOfTables = 11;
                 const tableCapacity = 10;
                 for (let i = 1; i <= numberOfTables; i++) {
                     tablesContainer.innerHTML += `
@@ -197,39 +114,32 @@
                             <div class="table-guests-container"></div>
                         </div>`;
                 }
-
+        
+                // Chargement depuis Firebase
+                await loadFromFirebase();
+        
                 allGuests = document.querySelectorAll('.guest');
                 allDropZones = document.querySelectorAll('.drop-zone');
-                totalGuests = allGuests.length;
+                totalGuests = initialGroomGuestsData.length + initialBrideGuestsData.length;
                 addDragDropListeners();
-                updateAllCounters();
+                updateAllCounters(initialGroomGuestsData.length, initialBrideGuestsData.length);
             }
-
-            function updateAllCounters() {
+        
+            function updateAllCounters(totalGroom, totalBride) {
                 let placedGuestsCount = 0;
-
-                // Master counter for tables
                 document.querySelectorAll('.table-drop-zone').forEach(table => {
-                    const guestsInTable = table.querySelectorAll('.guest').length;
+                    const guestsInTable = table.querySelector('.table-guests-container').querySelectorAll('.guest').length;
                     placedGuestsCount += guestsInTable;
                     table.querySelector('.table-counter').textContent = `${guestsInTable} / ${table.dataset.capacity}`;
                 });
-                masterCounterEl.textContent = `${placedGuestsCount} / ${totalGuests}`;
-
-                // Counters for individual guest lists
-                const groomListCounterEl = document.getElementById('groom-list-counter');
-                const brideListCounterEl = document.getElementById('bride-list-counter');
-
-                const currentGroomGuests = groomListContainer.querySelectorAll('.guest').length;
-                const totalGroomGuests = groomGuestsData.length;
-                groomListCounterEl.textContent = `(${currentGroomGuests} / ${totalGroomGuests})`;
-
-                const currentBrideGuests = brideListContainer.querySelectorAll('.guest').length;
-                const totalBrideGuests = brideGuestsData.length;
-                brideListCounterEl.textContent = `(${currentBrideGuests} / ${totalBrideGuests})`;
+                masterCounterEl.textContent = `${placedGuestsCount} / ${totalGroom + totalBride}`;
+        
+                document.getElementById('groom-list-counter').textContent =
+                    `(${groomListContainer.querySelectorAll('.guest').length} / ${totalGroom})`;
+                document.getElementById('bride-list-counter').textContent =
+                    `(${brideListContainer.querySelectorAll('.guest').length} / ${totalBride})`;
             }
-            
-            // --- NEW: Function to get the element to insert before ---
+        
             function getDragAfterElement(container, y) {
                 const draggableElements = [...container.querySelectorAll('.guest:not(.is-dragging)')];
                 return draggableElements.reduce((closest, child) => {
@@ -242,7 +152,7 @@
                     }
                 }, { offset: Number.NEGATIVE_INFINITY }).element;
             }
-
+        
             function addDragDropListeners() {
                 allGuests.forEach(guest => {
                     guest.addEventListener('dragstart', e => {
@@ -251,111 +161,109 @@
                     });
                     guest.addEventListener('dragend', e => e.target.classList.remove('is-dragging'));
                 });
-
+        
                 allDropZones.forEach(zone => {
                     zone.addEventListener('dragover', e => {
                         e.preventDefault();
                         const capacity = parseInt(zone.dataset.capacity) || Infinity;
-                        const currentCount = zone.querySelectorAll('.guest').length;
+                        const currentCount = zone.querySelector('.table-guests-container') ? zone.querySelector('.table-guests-container').querySelectorAll('.guest').length : zone.querySelectorAll('.guest').length;
                         zone.classList.toggle('table-full', currentCount >= capacity);
                         zone.classList.add('drag-over');
                     });
-                    zone.addEventListener('dragleave', e => zone.classList.remove('drag-over', 'table-full'));
+                    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over', 'table-full'));
                     zone.addEventListener('drop', e => {
                         e.preventDefault();
                         zone.classList.remove('drag-over', 'table-full');
                         const id = e.dataTransfer.getData('text/plain');
                         const draggableElement = document.getElementById(id);
                         if (!draggableElement) return;
-
+        
                         if (zone.classList.contains('table-drop-zone')) {
                             const capacity = parseInt(zone.dataset.capacity);
-                            const currentCount = zone.querySelectorAll('.guest').length;
+                            const currentCount = zone.querySelector('.table-guests-container').querySelectorAll('.guest').length;
                             if (currentCount < capacity) {
-                                zone.appendChild(draggableElement);
+                                zone.querySelector('.table-guests-container').appendChild(draggableElement);
+                                saveToFirebase();
                             }
-                        } else { // It's a guest list
+                        } else {
                             const afterElement = getDragAfterElement(zone, e.clientY);
                             if (afterElement == null) {
                                 zone.appendChild(draggableElement);
                             } else {
                                 zone.insertBefore(draggableElement, afterElement);
                             }
+                            saveToFirebase();
                         }
-                        updateAllCounters();
+                        updateAllCounters(initialGroomGuestsData.length, initialBrideGuestsData.length);
                     });
                 });
             }
-
-            // --- NEW: Save/Load Logic ---
-            function saveConfiguration() {
+        
+            async function saveToFirebase() {
                 const seating = {};
                 document.querySelectorAll('.table-drop-zone').forEach(table => {
-                    const guestIds = [...table.querySelectorAll('.guest')].map(guest => guest.id);
+                    const guestIds = [...table.querySelector('.table-guests-container').querySelectorAll('.guest')].map(guest => guest.id);
                     if (guestIds.length > 0) {
                         seating[table.id] = guestIds;
                     }
                 });
-                const blob = new Blob([JSON.stringify(seating, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'plan-de-table.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
 
+                // Inclure les listes d'invités non placés
+                seating['groom-guests'] = [...groomListContainer.querySelectorAll('.guest')].map(guest => guest.id);
+                seating['bride-guests'] = [...brideListContainer.querySelectorAll('.guest')].map(guest => guest.id);
+                
+                try {
+                    await setDoc(doc(db, "seatingPlans", "currentPlan"), seating);
+                    console.log("Plan sauvegardé sur Firebase !");
+                } catch (e) {
+                    console.error("Erreur lors de la sauvegarde :", e);
+                }
+            }
+        
+            async function loadFromFirebase() {
+                const docRef = doc(db, "seatingPlans", "currentPlan");
+                try {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const config = docSnap.data();
+                        if (Object.keys(config).length > 0) {
+                            console.log("Plan chargé depuis Firebase !");
+                            loadConfiguration(config);
+                        } else {
+                            console.log("La configuration sur Firebase est vide. Affichage des listes par défaut.");
+                        }
+                    } else {
+                        console.log("Aucun plan trouvé sur Firebase. Affichage des listes par défaut.");
+                    }
+                } catch (e) {
+                    console.error("Erreur de chargement :", e);
+                }
+            }
+        
             function loadConfiguration(config) {
-                initializeBoard(); // Reset board to default state
-                Object.keys(config).forEach(tableId => {
-                    const tableElement = document.getElementById(tableId);
-                    if (tableElement) {
-                        config[tableId].forEach(guestId => {
+                // Déplacer les invités vers leurs tables
+                Object.keys(config).forEach(zoneId => {
+                    const zoneElement = document.getElementById(zoneId);
+                    if (zoneElement) {
+                        config[zoneId].forEach(guestId => {
                             const guestElement = document.getElementById(guestId);
                             if (guestElement) {
-                                tableElement.appendChild(guestElement);
+                                if (zoneElement.classList.contains('table-drop-zone')) {
+                                     zoneElement.querySelector('.table-guests-container').appendChild(guestElement);
+                                } else {
+                                     zoneElement.appendChild(guestElement);
+                                }
                             }
                         });
                     }
                 });
-                updateAllCounters();
             }
-            
-            function handleFile(file) {
-                 if (file && file.type === "application/json") {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        try {
-                            const config = JSON.parse(e.target.result);
-                            loadConfiguration(config);
-                        } catch (err) {
-                            alert('Erreur: Le fichier de configuration est invalide.');
-                        }
-                    };
-                    reader.readAsText(file);
-                } else {
-                    alert("Veuillez sélectionner un fichier '.json' valide.");
-                }
-            }
-            
-            saveBtn.addEventListener('click', saveConfiguration);
-            importBtn.addEventListener('click', () => importFileEl.click());
-            importFileEl.addEventListener('change', e => handleFile(e.target.files[0]));
-            
-            // Allow dropping a file anywhere on the page
-            document.body.addEventListener('dragover', e => e.preventDefault());
-            document.body.addEventListener('drop', e => {
-                e.preventDefault();
-                if (e.dataTransfer.files.length > 0) {
-                     handleFile(e.dataTransfer.files[0]);
-                }
-            });
-
-            // Initial setup
+        
+            window.addEventListener('beforeunload', saveToFirebase);
+        
             initializeBoard();
         });
     </script>
+    
 </body>
 </html>
