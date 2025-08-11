@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de table</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #fdfaf6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #5d4037;
+        }
+
+        #master-counter {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #c89f70;
+        }
+        
+        /* --- Buttons for Save/Load --- */
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background-color: #5d4037;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 0 5px;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #795548;
+        }
+
+        /* --- Main Layout --- */
+        .main-container {
+            display: grid;
+            grid-template-columns: 220px 220px 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* --- Guest Lists --- */
+        .guest-list {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            height: 75vh;
+            overflow-y: auto;
+        }
+
+        .guest-list h2 {
+            text-align: center;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .guest {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: grab;
+            transition: background-color 0.3s, opacity 0.2s;
+            font-size: 0.9em;
+            color: white;
+            font-weight: 500;
+            user-select: none;
+        }
+        
+        .groom { background-color: #4a6c8c; }
+        .bride { background-color: #c89f70; }
+
+        .guest:active { cursor: grabbing; }
+        
+        /* --- Tables Area --- */
+        #tables-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .table-drop-zone {
+            background-color: #ffffff;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 250px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-drop-zone h3 {
+            text-align: center;
+            margin: 0 0 10px 0;
+            font-size: 1em;
+            color: #666;
+        }
+        
+        .table-counter {
+            text-align: center;
+            font-weight: bold;
+            color: #888;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .is-dragging { opacity: 0.5; }
+        .drag-over { border-color: #64b5f6; background-color: #e3f2fd; }
+        .table-full { border-color: #e57373; }
+        
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Plan de table 👩‍❤️‍👨</h1>
+        <p>Invités placés: <span id="master-counter">0/0</span></p>
+    </div>
+
+    <div class="controls">
+        <button id="save-btn" class="btn">💾 Enregistrer</button>
+        <button id="import-btn" class="btn">📂 Importer</button>
+        <input type="file" id="import-file" accept=".json" style="display: none;">
+    </div>
+
+    <div class="main-container">
+        <div id="groom-guests" class="guest-list drop-zone">
+            <h2>Long Vân</h2>
+        </div>
+
+        <div id="bride-guests" class="guest-list drop-zone">
+            <h2>Manal</h2>
+        </div>
+
+        <div id="tables-container"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const groomGuestsData = ['Cau 3', 'Cau 4', 'Mo 4', 'Maman', 'Papa', 'Cau 7', 'Cau 8', 'Mo 8', 'Di Ut', 'Chi Na', 'Jimmy', 'Chi Thy', 'Chi Thu', 'Anh Hieu', 'Thao', 'Kien', 'Danny', 'Julia', 'Nam', 'Co Hong Minh', 'Bo Xi', 'Idriss', 'Yasmine', 'Marc-Olivier', 'Aude', 'Ong Mien', 'Co Mai Dung', 'Clément', 'Matis', 'Co Hoa Dung', 'Benjamin', 'Amandine', 'Timothe', 'Margaux', 'Chu Tran', 'Virginie', 'Emilien', 'Flora', 'Co Be', 'Chu Vu', 'Léo', 'Mai-Lan', 'Bao', 'Zakaria', 'Tristan', 'Hadrien', 'Ines', 'Louis', 'Virgile', 'Uyen-My', 'Ong 6', 'Ba 6'];
+            const brideGuestsData = ['Léa Coache', 'Adrien Prevost', 'Axel Derrien', 'Claire Tualle', 'Charly', 'Shelsy Audouard', 'Taqwa', 'Sumeyra Solak', 'Hatice Solak', 'Dalia Solak', 'Henene Mestari', 'Derghal Amira', 'Yannis messaoud', 'Derghal Yanis', 'Derghal Ryad', 'Derghal Nadir', 'Derghal Salima', 'Derghal Wissem', 'Derghal Sanaa', 'Lakehal Ibtihal', 'Younes mari ibtihal', 'Lakeha Rihem', 'Lakehal Bachir', 'Lakehal Yasmina', 'Kamal', 'Amine', 'Elimane', 'Jordan', 'Luca', 'Zoe', 'Dounia', 'Karim', 'Tata Hiba', 'Masraf Amina', 'Masraf Nadir', 'Adra', 'Fethi', 'Fatima', '3aziz', 'Khali jilali', 'Sorya', 'Salhi Amina + Iyed', 'Amine', 'Brahim', 'Fatema', 'M Yannis', 'P Yannis'];
+
+            const groomListContainer = document.getElementById('groom-guests');
+            const brideListContainer = document.getElementById('bride-guests');
+            const tablesContainer = document.getElementById('tables-container');
+            const masterCounterEl = document.getElementById('master-counter');
+            const saveBtn = document.getElementById('save-btn');
+            const importBtn = document.getElementById('import-btn');
+            const importFileEl = document.getElementById('import-file');
+
+            let allGuests, allDropZones, totalGuests;
+
+            function initializeBoard() {
+                // Clear existing elements before populating
+                groomListContainer.innerHTML = '<h2>Long Vân<br><span id="groom-list-counter"></span></h2>';
+                brideListContainer.innerHTML = '<h2>Manal<br><span id="bride-list-counter"></span></h2>';
+                tablesContainer.innerHTML = '';
+
+                groomGuestsData.forEach((name, index) => {
+                    groomListContainer.innerHTML += `<div class="guest groom" id="groom-${index}" draggable="true">${name}</div>`;
+                });
+                brideGuestsData.forEach((name, index) => {
+                    brideListContainer.innerHTML += `<div class="guest bride" id="bride-${index}" draggable="true">${name}</div>`;
+                });
+
+                const numberOfTables = 10;
+                const tableCapacity = 10;
+                for (let i = 1; i <= numberOfTables; i++) {
+                    tablesContainer.innerHTML += `
+                        <div class="table-drop-zone drop-zone" id="table-${i}" data-capacity="${tableCapacity}">
+                            <h3>Table ${i}</h3>
+                            <span class="table-counter">0 / ${tableCapacity}</span>
+                            <div class="table-guests-container"></div>
+                        </div>`;
+                }
+
+                allGuests = document.querySelectorAll('.guest');
+                allDropZones = document.querySelectorAll('.drop-zone');
+                totalGuests = allGuests.length;
+                addDragDropListeners();
+                updateAllCounters();
+            }
+
+            function updateAllCounters() {
+                let placedGuestsCount = 0;
+
+                // Master counter for tables
+                document.querySelectorAll('.table-drop-zone').forEach(table => {
+                    const guestsInTable = table.querySelectorAll('.guest').length;
+                    placedGuestsCount += guestsInTable;
+                    table.querySelector('.table-counter').textContent = `${guestsInTable} / ${table.dataset.capacity}`;
+                });
+                masterCounterEl.textContent = `${placedGuestsCount} / ${totalGuests}`;
+
+                // Counters for individual guest lists
+                const groomListCounterEl = document.getElementById('groom-list-counter');
+                const brideListCounterEl = document.getElementById('bride-list-counter');
+
+                const currentGroomGuests = groomListContainer.querySelectorAll('.guest').length;
+                const totalGroomGuests = groomGuestsData.length;
+                groomListCounterEl.textContent = `(${currentGroomGuests} / ${totalGroomGuests})`;
+
+                const currentBrideGuests = brideListContainer.querySelectorAll('.guest').length;
+                const totalBrideGuests = brideGuestsData.length;
+                brideListCounterEl.textContent = `(${currentBrideGuests} / ${totalBrideGuests})`;
+            }
+            
+            // --- NEW: Function to get the element to insert before ---
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.guest:not(.is-dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            function addDragDropListeners() {
+                allGuests.forEach(guest => {
+                    guest.addEventListener('dragstart', e => {
+                        e.dataTransfer.setData('text/plain', e.target.id);
+                        setTimeout(() => e.target.classList.add('is-dragging'), 0);
+                    });
+                    guest.addEventListener('dragend', e => e.target.classList.remove('is-dragging'));
+                });
+
+                allDropZones.forEach(zone => {
+                    zone.addEventListener('dragover', e => {
+                        e.preventDefault();
+                        const capacity = parseInt(zone.dataset.capacity) || Infinity;
+                        const currentCount = zone.querySelectorAll('.guest').length;
+                        zone.classList.toggle('table-full', currentCount >= capacity);
+                        zone.classList.add('drag-over');
+                    });
+                    zone.addEventListener('dragleave', e => zone.classList.remove('drag-over', 'table-full'));
+                    zone.addEventListener('drop', e => {
+                        e.preventDefault();
+                        zone.classList.remove('drag-over', 'table-full');
+                        const id = e.dataTransfer.getData('text/plain');
+                        const draggableElement = document.getElementById(id);
+                        if (!draggableElement) return;
+
+                        if (zone.classList.contains('table-drop-zone')) {
+                            const capacity = parseInt(zone.dataset.capacity);
+                            const currentCount = zone.querySelectorAll('.guest').length;
+                            if (currentCount < capacity) {
+                                zone.appendChild(draggableElement);
+                            }
+                        } else { // It's a guest list
+                            const afterElement = getDragAfterElement(zone, e.clientY);
+                            if (afterElement == null) {
+                                zone.appendChild(draggableElement);
+                            } else {
+                                zone.insertBefore(draggableElement, afterElement);
+                            }
+                        }
+                        updateAllCounters();
+                    });
+                });
+            }
+
+            // --- NEW: Save/Load Logic ---
+            function saveConfiguration() {
+                const seating = {};
+                document.querySelectorAll('.table-drop-zone').forEach(table => {
+                    const guestIds = [...table.querySelectorAll('.guest')].map(guest => guest.id);
+                    if (guestIds.length > 0) {
+                        seating[table.id] = guestIds;
+                    }
+                });
+                const blob = new Blob([JSON.stringify(seating, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'plan-de-table.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            function loadConfiguration(config) {
+                initializeBoard(); // Reset board to default state
+                Object.keys(config).forEach(tableId => {
+                    const tableElement = document.getElementById(tableId);
+                    if (tableElement) {
+                        config[tableId].forEach(guestId => {
+                            const guestElement = document.getElementById(guestId);
+                            if (guestElement) {
+                                tableElement.appendChild(guestElement);
+                            }
+                        });
+                    }
+                });
+                updateAllCounters();
+            }
+            
+            function handleFile(file) {
+                 if (file && file.type === "application/json") {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        try {
+                            const config = JSON.parse(e.target.result);
+                            loadConfiguration(config);
+                        } catch (err) {
+                            alert('Erreur: Le fichier de configuration est invalide.');
+                        }
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert("Veuillez sélectionner un fichier '.json' valide.");
+                }
+            }
+            
+            saveBtn.addEventListener('click', saveConfiguration);
+            importBtn.addEventListener('click', () => importFileEl.click());
+            importFileEl.addEventListener('change', e => handleFile(e.target.files[0]));
+            
+            // Allow dropping a file anywhere on the page
+            document.body.addEventListener('dragover', e => e.preventDefault());
+            document.body.addEventListener('drop', e => {
+                e.preventDefault();
+                if (e.dataTransfer.files.length > 0) {
+                     handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // Initial setup
+            initializeBoard();
+        });
+    </script>
+</body>
+</html>
