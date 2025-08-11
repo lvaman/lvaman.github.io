@@ -1,0 +1,123 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #fdfaf6;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+h1 {
+    color: #5d4037;
+}
+
+#master-counter {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #c89f70;
+}
+
+/* --- Main Layout --- */
+.main-container {
+    display: grid;
+    grid-template-columns: 220px 220px 1fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+    
+/* --- Guest Lists --- */
+.guest-list {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    height: 75vh;
+    overflow-y: auto;
+}
+
+.guest-list h2 {
+    text-align: center;
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+.guest {
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 5px;
+    cursor: grab;
+    transition: background-color 0.3s, opacity 0.2s;
+    font-size: 0.9em;
+    color: white;
+    font-weight: 500;
+    user-select: none;
+}
+    
+.groom { background-color: #4a6c8c; }
+.bride { background-color: #c89f70; }
+
+.guest:active { cursor: grabbing; }
+
+/* --- Nouvelle mise en page pour les catégories d'invités --- */
+.guest-category {
+    margin-bottom: 15px;
+}
+
+.guest-category h3 {
+    text-align: center;
+    margin: 10px 0;
+    padding: 5px 0;
+    border-bottom: 1px solid #ddd;
+    color: #5d4037;
+    font-size: 1em;
+}
+
+.guest-sublist {
+    min-height: 50px; /* Pour que la zone de dépose soit visible même si elle est vide */
+    padding: 5px;
+}
+
+/* --- Tables Area --- */
+#tables-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.table-drop-zone {
+    background-color: #ffffff;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 250px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-drop-zone h3 {
+    text-align: center;
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    color: #666;
+}
+    
+.table-counter {
+    text-align: center;
+    font-weight: bold;
+    color: #888;
+    margin-bottom: 10px;
+    display: block;
+}
+    
+.is-dragging { opacity: 0.5; }
+.drag-over { border-color: #64b5f6; background-color: #e3f2fd; }
+.table-full { border-color: #e57373; }
