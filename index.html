@@ -8,7 +8,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
     
         // Votre configuration Firebase
         const firebaseConfig = {
@@ -27,7 +27,7 @@
         window.db = getFirestore(app);
         window.doc = doc;
         window.setDoc = setDoc;
-        window.getDoc = getDoc;
+        window.onSnapshot = onSnapshot;
         window.collection = collection;
     </script>
 </head>
@@ -60,7 +60,6 @@
             let allGuests, allDropZones, totalGuests;
             const db = window.db;
 
-            // Listes d'invités directement dans le script
             const initialGroomGuestsData = [
                 "Long Vân",
                 "Cau 3", "Cau 4", "Cau 7", "Cau 8",
@@ -101,7 +100,6 @@
                         <div class="table-guests-container"></div>
                     </div>`;
 
-                // Modification du nombre de tables à 15
                 const numberOfTables = 15;
                 const tableCapacity = 10;
                 for (let i = 1; i <= numberOfTables; i++) {
@@ -113,7 +111,7 @@
                         </div>`;
                 }
         
-                await loadFromFirebase();
+                await listenForRealtimeUpdates(); // Remplace loadFromFirebase()
         
                 allGuests = document.querySelectorAll('.guest');
                 allDropZones = document.querySelectorAll('.drop-zone');
@@ -225,7 +223,7 @@
                             }
                             saveToFirebase();
                         }
-                        updateAllCounters(initialGroomGuestsData.length, initialBrideGuestsData.length);
+                        // updateAllCounters(initialGroomGuestsData.length, initialBrideGuestsData.length); // Désactivé pour laisser la mise à jour en temps réel s'en occuper
                     });
                 });
             }
@@ -249,33 +247,32 @@
                     console.error("Erreur lors de la sauvegarde :", e);
                 }
             }
-        
-            async function loadFromFirebase() {
-                const docRef = doc(db, "seatingPlans", "currentPlan");
-                try {
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const config = docSnap.data();
-                        if (Object.keys(config).length > 0) {
-                            console.log("Plan chargé depuis Firebase !");
-                            loadConfiguration(config);
-                        } else {
-                            console.log("La configuration sur Firebase est vide. Affichage des listes par défaut.");
-                        }
-                    } else {
-                        console.log("Aucun plan trouvé sur Firebase. Affichage des listes par défaut.");
-                    }
-                } catch (e) {
-                    console.error("Erreur de chargement :", e);
-                }
-            }
-        
+
             function loadConfiguration(config) {
+                // Créer une copie des invités existants pour les déplacer
+                const allGuestsMap = new Map();
+                document.querySelectorAll('.guest').forEach(guest => allGuestsMap.set(guest.id, guest));
+
                 Object.keys(config).forEach(zoneId => {
                     const zoneElement = document.getElementById(zoneId);
                     if (zoneElement) {
+                        // Vider le conteneur avant de recharger pour éviter les doublons
+                        if (zoneElement.classList.contains('table-drop-zone')) {
+                             zoneElement.querySelector('.table-guests-container').innerHTML = '';
+                        } else {
+                            zoneElement.innerHTML = '';
+                             // Recréer le titre et le compteur pour les listes principales
+                             if (zoneId === 'groom-guests') {
+                                 zoneElement.innerHTML = '<h2>Long Vân<br><span id="groom-list-counter"></span></h2>';
+                             }
+                             if (zoneId === 'bride-guests') {
+                                 zoneElement.innerHTML = '<h2>Manal<br><span id="bride-list-counter"></span></h2>';
+                             }
+                        }
+
+                        // Déplacer les invités vers leur nouvelle position
                         config[zoneId].forEach(guestId => {
-                            const guestElement = document.getElementById(guestId);
+                            const guestElement = allGuestsMap.get(guestId);
                             if (guestElement) {
                                 if (zoneElement.classList.contains('table-drop-zone')) {
                                     zoneElement.querySelector('.table-guests-container').appendChild(guestElement);
@@ -286,9 +283,29 @@
                         });
                     }
                 });
+                updateAllCounters(initialGroomGuestsData.length, initialBrideGuestsData.length);
+            }
+
+            function listenForRealtimeUpdates() {
+                const docRef = doc(db, "seatingPlans", "currentPlan");
+                return new Promise((resolve, reject) => {
+                    onSnapshot(docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            const config = docSnap.data();
+                            console.log("Mise à jour en temps réel reçue !");
+                            loadConfiguration(config);
+                        } else {
+                            console.log("Aucun plan trouvé sur Firebase. Initialisation des listes par défaut.");
+                        }
+                        resolve();
+                    }, (error) => {
+                        console.error("Erreur lors de la mise à jour en temps réel :", error);
+                        reject(error);
+                    });
+                });
             }
         
-            window.addEventListener('beforeunload', saveToFirebase);
+            // Note: window.addEventListener('beforeunload', saveToFirebase); n'est plus nécessaire car les sauvegardes sont automatiques après chaque drop.
         
             initializeBoard();
         });
