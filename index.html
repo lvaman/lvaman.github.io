@@ -101,7 +101,8 @@
                         <div class="table-guests-container"></div>
                     </div>`;
 
-                const numberOfTables = 11;
+                // Modification du nombre de tables à 15
+                const numberOfTables = 15;
                 const tableCapacity = 10;
                 for (let i = 1; i <= numberOfTables; i++) {
                     tablesContainer.innerHTML += `
@@ -168,7 +169,6 @@
                         const isGroomGuest = draggableElement.classList.contains('groom');
                         const isBrideGuest = draggableElement.classList.contains('bride');
         
-                        // La logique de restriction est simplifiée car il n'y a plus de sous-listes
                         if (zone.id === 'groom-guests' && isBrideGuest) {
                             e.dataTransfer.dropEffect = 'none';
                             return;
