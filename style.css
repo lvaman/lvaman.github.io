@@ -4,18 +4,29 @@ body {
     color: #333;
     margin: 0;
     padding: 20px;
+    box-sizing: border-box;
 }
+html { box-sizing: border-box; }
+*, *:before, *:after { box-sizing: inherit; }
+
 .header { text-align: center; margin-bottom: 20px; position: relative; }
 h1 { color: #5d4037; }
 #master-counter { font-size: 1.5em; font-weight: bold; color: #c89f70; }
 
 .main-container {
     display: grid;
-    grid-template-columns: 240px 240px 1fr;
+    grid-template-columns: 490px 1fr;
     gap: 20px;
     width: 100%;
     max-width: 1600px;
     margin: 0 auto;
+}
+
+.guest-lists-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    min-width: 0
 }
     
 .guest-list {
@@ -42,6 +53,7 @@ h1 { color: #5d4037; }
     color: white;
     font-weight: 500;
     user-select: none;
+    word-break: break-word;
 }
 .groom { background-color: #4a6c8c; }
 .bride { background-color: #c89f70; }
@@ -50,16 +62,6 @@ h1 { color: #5d4037; }
     background-color: #d4af37; 
     border: 1px solid #c29d2e;
 }
-
-
-.delete-guest {
-    cursor: pointer;
-    font-weight: bold;
-    padding: 0 5px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-.delete-guest:hover { opacity: 1; }
 
 .add-guest-form {
     display: flex;
@@ -72,6 +74,7 @@ h1 { color: #5d4037; }
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 8px;
+    min-width: 50px;
 }
 .add-guest-form button {
     margin-left: 5px;
@@ -81,6 +84,7 @@ h1 { color: #5d4037; }
     font-weight: bold;
     border-radius: 4px;
     width: 35px;
+    flex-shrink: 0;
     cursor: pointer;
 }
 
@@ -104,22 +108,48 @@ h1 { color: #5d4037; }
 .is-dragging { opacity: 0.5; }
 .drag-over { border-color: #64b5f6; background-color: #e3f2fd; }
 
+.delete-guest-button {
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+    background-color: #ef5350;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    line-height: 18px;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+.delete-guest-button:hover {
+    background-color: #d32f2f;
+}
+
+.return-guest-button {
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    font-size: 20px;
+    padding: 0 5px;
+    flex-shrink: 0;
+}
+.return-guest-button:hover {
+    opacity: 1;
+}
+
 @media (max-width: 768px) {
-    body {
+    body { padding: 10px; }
+    .header h1 { font-size: 1.5em; }
+    .main-container { grid-template-columns: 1fr; gap: 20px; }
+    .guest-lists-wrapper { gap: 10px; }
+    .guest-list { 
+        height: 50vh;
         padding: 10px;
+        min-width: 0;
     }
-    .header h1 {
-        font-size: 1.5em;
-    }
-    .main-container {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    .guest-list {
-        height: auto;
-        max-height: 45vh;
-    }
-    #tables-container {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    #tables-container { grid-template-columns: repeat(2, 1fr); }
 }

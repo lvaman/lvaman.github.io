@@ -31,7 +31,7 @@ async function addGuest(type) {
 }
 
 async function deleteGuest(type, guestName) {
-    if (!confirm(`Voulez-vous retirer ${guestName} ?`)) return;
+    if (!confirm(`Voulez-vous supprimer ${guestName} ?`)) return;
     
     const guestRef = doc(db, 'guests', type);
     await updateDoc(guestRef, { names: arrayRemove(guestName) });
@@ -61,8 +61,8 @@ function renderGuestLists(groomGuests, brideGuests) {
     allGuestsData = { groom: groomGuests, bride: brideGuests };
     document.querySelectorAll('.guest').forEach(guestElement => guestElement.remove());
 
-    groomGuests.forEach((name, index) => groomListContainer.appendChild(createGuestElement('groom', name, index)));
-    brideGuests.forEach((name, index) => brideListContainer.appendChild(createGuestElement('bride', name, index)));
+    groomGuests.forEach((name, index) => groomListContainer.appendChild(createGuestElement('groom', name)));
+    brideGuests.forEach((name, index) => brideListContainer.appendChild(createGuestElement('bride', name)));
     
     applySeatingPlan();
     updateAllCounters();
@@ -76,11 +76,9 @@ function customGuestSort(a, b) {
     return a.localeCompare(b);
 }
 
-function createGuestElement(type, name, index) {
-    const guestId = `${type}-guest-${index}`;
+function createGuestElement(type, name) {
     const guestDiv = document.createElement('div');
     guestDiv.className = `guest ${type}`;
-    guestDiv.id = guestId;
     guestDiv.dataset.name = name;
     const nameSpan = document.createElement('span');
     nameSpan.textContent = name;
@@ -88,14 +86,38 @@ function createGuestElement(type, name, index) {
 
     if (name === 'Long Vân' || name === 'Manal') {
         guestDiv.classList.add('vip-guest');
-    } else {
-        const deleteBtn = document.createElement('span');
-        deleteBtn.className = 'delete-guest';
-        deleteBtn.textContent = '×';
-        deleteBtn.onclick = () => deleteGuest(type, name);
-        guestDiv.appendChild(deleteBtn);
     }
     return guestDiv;
+}
+
+function addDeleteButton(guestElement) {
+    const guestName = guestElement.dataset.name;
+    const guestType = guestElement.classList.contains('groom') ? 'groom' : 'bride';
+    if (guestName === 'Long Vân' || guestName === 'Manal') return;
+
+    const deleteBtn = document.createElement('span');
+    deleteBtn.className = 'delete-guest-button';
+    deleteBtn.textContent = '−'; // Minus sign for delete
+    deleteBtn.onclick = () => deleteGuest(guestType, guestName);
+    guestElement.appendChild(deleteBtn);
+}
+
+function addReturnButton(guestElement) {
+    const returnBtn = document.createElement('span');
+    returnBtn.className = 'return-guest-button';
+    returnBtn.textContent = '×'; // Cross for return
+    returnBtn.onclick = () => returnGuestToList(guestElement);
+    guestElement.appendChild(returnBtn);
+}
+
+function returnGuestToList(guestElement) {
+    const guestType = guestElement.classList.contains('groom') ? 'groom' : 'bride';
+    const targetContainer = guestType === 'groom' ? groomListContainer : brideListContainer;
+    targetContainer.appendChild(guestElement);
+    sortGuestsInContainer(targetContainer);
+
+    const newSeatingConfig = buildSeatingConfigFromDOM();
+    saveToFirebase(newSeatingConfig);
 }
 
 function initializeDragAndDrop() {
@@ -104,21 +126,16 @@ function initializeDragAndDrop() {
         new Sortable(zone, {
             group: 'shared',
             animation: 150,
-
             delay: 150,
             delayOnTouchOnly: true,
             touchStartThreshold: 5,
-
             scroll: true,
             scrollSensitivity: 100,
             scrollSpeed: 20,
-
             onEnd: function (evt) {
-                const originList = evt.from;
-                const destinationList = evt.to;
-                sortGuestsInContainer(originList);
-                if (originList !== destinationList) {
-                    sortGuestsInContainer(destinationList);
+                const destinationZone = evt.to.closest('.drop-zone');
+                if (destinationZone && destinationZone.classList.contains('guest-list')) {
+                    sortGuestsInContainer(evt.to);
                 }
                 const newSeatingConfig = buildSeatingConfigFromDOM();
                 saveToFirebase(newSeatingConfig);
@@ -165,26 +182,40 @@ async function saveToFirebase(seatingConfig) {
 }
 
 function applySeatingPlan() {
-    const allGuestsMap = new Map();
-    document.querySelectorAll('.guest').forEach(guest => allGuestsMap.set(guest.dataset.name, guest));
+    const allGuestsOnPage = new Map();
+    document.querySelectorAll('.guest').forEach(guest => allGuestsOnPage.set(guest.dataset.name, guest));
+
     Object.keys(currentSeatingConfig).forEach(zoneId => {
         const zoneElement = document.getElementById(zoneId);
-        if (zoneElement) {
-            let container;
-            if (zoneElement.classList.contains('table-drop-zone')) {
-                container = zoneElement.querySelector('.table-guests-container');
-            } else if (zoneElement.classList.contains('guest-list')) {
-                container = zoneElement.querySelector('.guest-container');
-            }
-            if (container) {
-                currentSeatingConfig[zoneId].forEach(guestName => {
-                    const guestElement = allGuestsMap.get(guestName);
-                    if (guestElement) container.appendChild(guestElement);
-                });
-                sortGuestsInContainer(container);
-            }
+        if (!zoneElement) return;
+
+        let container;
+        if (zoneElement.classList.contains('table-drop-zone')) {
+            container = zoneElement.querySelector('.table-guests-container');
+        } else if (zoneElement.classList.contains('guest-list')) {
+            container = zoneElement.querySelector('.guest-container');
+        }
+
+        if (container) {
+            currentSeatingConfig[zoneId].forEach(guestName => {
+                const guestElement = allGuestsOnPage.get(guestName);
+                if (guestElement) {
+                    const oldButton = guestElement.querySelector('.delete-guest-button, .return-guest-button');
+                    if (oldButton) oldButton.remove();
+
+                    if (zoneElement.classList.contains('table-drop-zone')) {
+                        addReturnButton(guestElement);
+                    } else {
+                        addDeleteButton(guestElement);
+                    }
+                    container.appendChild(guestElement);
+                }
+            });
         }
     });
+
+    sortGuestsInContainer(groomListContainer);
+    sortGuestsInContainer(brideListContainer);
 }
 
 function updateAllCounters() {
