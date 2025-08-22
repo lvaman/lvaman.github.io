@@ -31,7 +31,7 @@ async function addGuest(type) {
 }
 
 async function deleteGuest(type, guestName) {
-    if (!confirm(`Are you sure you want to remove ${guestName}?`)) return;
+    if (!confirm(`Voulez-vous retirer ${guestName} ?`)) return;
     
     const guestRef = doc(db, 'guests', type);
     await updateDoc(guestRef, { names: arrayRemove(guestName) });
@@ -58,6 +58,8 @@ function initializeBoard() {
 }
 
 function renderGuestLists(groomGuests, brideGuests) {
+    document.querySelectorAll('.guest').forEach(guestElement => guestElement.remove());
+
     allGuestsData = { groom: groomGuests, bride: brideGuests };
     groomListContainer.innerHTML = '';
     brideListContainer.innerHTML = '';
