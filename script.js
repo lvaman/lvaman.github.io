@@ -138,18 +138,9 @@ function initializeDragAndDrop() {
             scrollSensitivity: 100,
             scrollSpeed: 20,
             onEnd: function (evt) {
-                const item = evt.item;
                 const destinationZone = evt.to.closest('.drop-zone');
-                const oldButton = item.querySelector('.delete-guest-button, .return-guest-button');
-                if(oldButton) oldButton.remove();
 
-                if (destinationZone.classList.contains('table-drop-zone')) {
-                    addReturnButton(item);
-                } else {
-                    addDeleteButton(item);
-                }
-
-                if (destinationZone.classList.contains('guest-list')) {
+                if (destinationZone && destinationZone.classList.contains('guest-list')) {
                     sortGuestsInContainer(evt.to);
                 }
                 const newSeatingConfig = buildSeatingConfigFromDOM();
@@ -165,10 +156,12 @@ function initializeDragAndDrop() {
                     return false;
                 }
                 if (targetZone.classList.contains('table-drop-zone')) {
-                    const capacity = parseInt(targetZone.dataset.capacity, 10);
-                    const currentGuests = targetZone.querySelectorAll('.guest').length;
-                    if (currentGuests >= capacity) {
-                        return false;
+                    if (evt.from !== evt.to) {
+                        const capacity = parseInt(targetZone.dataset.capacity, 10);
+                        const currentGuests = targetZone.querySelectorAll('.guest').length;
+                        if (currentGuests >= capacity) {
+                            return false;
+                        }
                     }
                 }
                 return true;
@@ -215,11 +208,20 @@ function applySeatingPlan() {
             currentSeatingConfig[zoneId].forEach(guestName => {
                 const guestElement = allGuestsOnPage.get(guestName);
                 if (guestElement) {
+                    const oldButton = guestElement.querySelector('.delete-guest-button, .return-guest-button');
+                    if (oldButton) oldButton.remove();
+                    if (zoneElement.classList.contains('table-drop-zone')) {
+                        addReturnButton(guestElement); // Add '×' for guests at tables
+                    } else {
+                        addDeleteButton(guestElement); // Add '−' for guests in sidebars
+                    }
                     container.appendChild(guestElement);
                 }
             });
         }
     });
+    sortGuestsInContainer(groomListContainer);
+    sortGuestsInContainer(brideListContainer);
 }
 
 function updateAllCounters() {
