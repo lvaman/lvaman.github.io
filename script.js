@@ -12,7 +12,6 @@ const masterCounterEl = document.getElementById('master-counter');
 
 // --- Global State ---
 let allGuestsData = { groom: [], bride: [] };
-let allDropZones;
 let currentSeatingConfig = {};
 
 // --- Guest Management ---
@@ -43,7 +42,7 @@ async function deleteGuest(type, guestName) {
     await saveToFirebase(currentSeatingConfig);
 }
 
-// --- Main Appliction ---
+// --- Main Application ---
 function initializeBoard() {
     tablesContainer.innerHTML = '';
     const tableConfigs = [{ id: 'head', name: "d'honneur", capacity: 2 }, ...Array.from({ length: 19 }, (_, i) => ({ id: i + 1, name: i + 1, capacity: 10 }))];
@@ -55,8 +54,7 @@ function initializeBoard() {
         tableDiv.innerHTML = `<h3>Table ${config.name}</h3><span class="table-counter">0 / ${config.capacity}</span><div class="table-guests-container"></div>`;
         tablesContainer.appendChild(tableDiv);
     });
-    allDropZones = document.querySelectorAll('.drop-zone');
-    addDragDropListeners();
+    initializeDragAndDrop();
 }
 
 function renderGuestLists(groomGuests, brideGuests) {
@@ -85,7 +83,6 @@ function createGuestElement(type, name, index) {
     const guestDiv = document.createElement('div');
     guestDiv.className = `guest ${type}`;
     guestDiv.id = guestId;
-    guestDiv.draggable = true;
     guestDiv.dataset.name = name;
 
     const nameSpan = document.createElement('span');
@@ -105,59 +102,47 @@ function createGuestElement(type, name, index) {
     return guestDiv;
 }
 
+function initializeDragAndDrop() {
+    const allDropZones = document.querySelectorAll('.guest-container, .table-guests-container');
+
+    allDropZones.forEach(zone => {
+        new Sortable(zone, {
+            group: 'shared',
+            animation: 150,
+            onEnd: function (evt) {
+                const originList = evt.from;
+                const destinationList = evt.to;
+
+                sortGuestsInContainer(originList);
+                if (originList !== destinationList) {
+                    sortGuestsInContainer(destinationList);
+                }
+
+                const newSeatingConfig = buildSeatingConfigFromDOM();
+                saveToFirebase(newSeatingConfig);
+            },
+            onMove: function (evt) {
+                const dragged = evt.dragged;
+                const targetList = evt.to.closest('.guest-list');
+
+                if (!targetList) return true;
+
+                const isGroomGuest = dragged.classList.contains('groom');
+                const isBrideGuest = dragged.classList.contains('bride');
+
+                if (targetList.id === 'groom-guests' && isBrideGuest) return false;
+                if (targetList.id === 'bride-guests' && isGroomGuest) return false;
+
+                return true;
+            }
+        });
+    });
+}
+
 function sortGuestsInContainer(container) {
     const guests = Array.from(container.querySelectorAll('.guest'));
     guests.sort((a, b) => customGuestSort(a.dataset.name, b.dataset.name));
     guests.forEach(guest => container.appendChild(guest));
-}
-
-function addDragDropListeners() {
-    document.body.addEventListener('dragstart', e => {
-        if (e.target.classList.contains('guest')) {
-            e.dataTransfer.setData('text/plain', e.target.id);
-            setTimeout(() => e.target.classList.add('is-dragging'), 0);
-        }
-    });
-    document.body.addEventListener('dragend', e => {
-        if (e.target.classList.contains('guest')) {
-            e.target.classList.remove('is-dragging');
-        }
-    });
-
-    allDropZones.forEach(zone => {
-        zone.addEventListener('dragover', e => {
-            e.preventDefault();
-            zone.classList.add('drag-over');
-        });
-        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-        zone.addEventListener('drop', e => {
-            e.preventDefault();
-            zone.classList.remove('drag-over');
-            const id = e.dataTransfer.getData('text/plain');
-            const draggableElement = document.getElementById(id);
-            if (!draggableElement) return;
-
-            const isGroomGuest = draggableElement.classList.contains('groom');
-            const isBrideGuest = draggableElement.classList.contains('bride');
-            if ((zone.id === 'groom-guests' && isBrideGuest) || (zone.id === 'bride-guests' && isGroomGuest)) {
-                return;
-            }
-
-            let targetContainer;
-            if (zone.classList.contains('table-drop-zone')) {
-                targetContainer = zone.querySelector('.table-guests-container');
-            } else if (zone.classList.contains('guest-list')) {
-                targetContainer = zone.querySelector('.guest-container');
-            }
-
-            if (targetContainer) {
-                targetContainer.appendChild(draggableElement);
-                sortGuestsInContainer(targetContainer);
-                const newSeatingConfig = buildSeatingConfigFromDOM();
-                saveToFirebase(newSeatingConfig);
-            }
-        });
-    });
 }
 
 function buildSeatingConfigFromDOM() {
@@ -224,6 +209,7 @@ onSnapshot(doc(db, "guests", "groom"), (docSnap) => {
     const groomNames = docSnap.exists() ? docSnap.data().names.sort(customGuestSort) : [];
     renderGuestLists(groomNames, allGuestsData.bride);
 });
+
 onSnapshot(doc(db, "guests", "bride"), (docSnap) => {
     const brideNames = docSnap.exists() ? docSnap.data().names.sort(customGuestSort) : [];
     renderGuestLists(allGuestsData.groom, brideNames);

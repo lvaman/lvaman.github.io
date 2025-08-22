@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan de table</title>
     <link rel="stylesheet" href="style.css">
-
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
@@ -40,7 +40,7 @@
                 <h2>Long Vân<br><span id="groom-list-counter"></span></h2>
                 <div class="guest-container"></div>
                 <div class="add-guest-form">
-                    <input type="text" id="groom-guest-input" placeholder="Add new guest...">
+                    <input type="text" id="groom-guest-input" placeholder="Ajouter un invité...">
                     <button id="add-groom-guest-button">+</button>
                 </div>
             </div>
@@ -49,7 +49,7 @@
                 <h2>Manal<br><span id="bride-list-counter"></span></h2>
                 <div class="guest-container"></div>
                 <div class="add-guest-form">
-                    <input type="text" id="bride-guest-input" placeholder="Add new guest...">
+                    <input type="text" id="bride-guest-input" placeholder="Ajouter un invité...">
                     <button id="add-bride-guest-button">+</button>
                 </div>
             </div>
