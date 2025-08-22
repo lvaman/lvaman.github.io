@@ -104,6 +104,15 @@ function initializeDragAndDrop() {
         new Sortable(zone, {
             group: 'shared',
             animation: 150,
+
+            delay: 150,
+            delayOnTouchOnly: true,
+            touchStartThreshold: 5,
+
+            scroll: true,
+            scrollSensitivity: 100,
+            scrollSpeed: 20,
+
             onEnd: function (evt) {
                 const originList = evt.from;
                 const destinationList = evt.to;
