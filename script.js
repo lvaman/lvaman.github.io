@@ -58,11 +58,8 @@ function initializeBoard() {
 }
 
 function renderGuestLists(groomGuests, brideGuests) {
-    document.querySelectorAll('.guest').forEach(guestElement => guestElement.remove());
-
     allGuestsData = { groom: groomGuests, bride: brideGuests };
-    groomListContainer.innerHTML = '';
-    brideListContainer.innerHTML = '';
+    document.querySelectorAll('.guest').forEach(guestElement => guestElement.remove());
 
     groomGuests.forEach((name, index) => groomListContainer.appendChild(createGuestElement('groom', name, index)));
     brideGuests.forEach((name, index) => brideListContainer.appendChild(createGuestElement('bride', name, index)));
@@ -74,7 +71,6 @@ function renderGuestLists(groomGuests, brideGuests) {
 function customGuestSort(a, b) {
     const isVipA = a === 'Long Vân' || a === 'Manal';
     const isVipB = b === 'Long Vân' || b === 'Manal';
-
     if (isVipA && !isVipB) return -1;
     if (!isVipA && isVipB) return 1;
     return a.localeCompare(b);
@@ -86,7 +82,6 @@ function createGuestElement(type, name, index) {
     guestDiv.className = `guest ${type}`;
     guestDiv.id = guestId;
     guestDiv.dataset.name = name;
-
     const nameSpan = document.createElement('span');
     nameSpan.textContent = name;
     guestDiv.appendChild(nameSpan);
@@ -100,13 +95,11 @@ function createGuestElement(type, name, index) {
         deleteBtn.onclick = () => deleteGuest(type, name);
         guestDiv.appendChild(deleteBtn);
     }
-
     return guestDiv;
 }
 
 function initializeDragAndDrop() {
     const allDropZones = document.querySelectorAll('.guest-container, .table-guests-container');
-
     allDropZones.forEach(zone => {
         new Sortable(zone, {
             group: 'shared',
@@ -114,27 +107,29 @@ function initializeDragAndDrop() {
             onEnd: function (evt) {
                 const originList = evt.from;
                 const destinationList = evt.to;
-
                 sortGuestsInContainer(originList);
                 if (originList !== destinationList) {
                     sortGuestsInContainer(destinationList);
                 }
-
                 const newSeatingConfig = buildSeatingConfigFromDOM();
                 saveToFirebase(newSeatingConfig);
             },
             onMove: function (evt) {
                 const dragged = evt.dragged;
-                const targetList = evt.to.closest('.guest-list');
-
-                if (!targetList) return true;
-
+                const targetZone = evt.to.closest('.drop-zone');
+                if (!targetZone) return false;
                 const isGroomGuest = dragged.classList.contains('groom');
                 const isBrideGuest = dragged.classList.contains('bride');
-
-                if (targetList.id === 'groom-guests' && isBrideGuest) return false;
-                if (targetList.id === 'bride-guests' && isGroomGuest) return false;
-
+                if ((targetZone.id === 'groom-guests' && isBrideGuest) || (targetZone.id === 'bride-guests' && isGroomGuest)) {
+                    return false;
+                }
+                if (targetZone.classList.contains('table-drop-zone')) {
+                    const capacity = parseInt(targetZone.dataset.capacity, 10);
+                    const currentGuests = targetZone.querySelectorAll('.guest').length;
+                    if (currentGuests >= capacity) {
+                        return false;
+                    }
+                }
                 return true;
             }
         });
@@ -163,7 +158,6 @@ async function saveToFirebase(seatingConfig) {
 function applySeatingPlan() {
     const allGuestsMap = new Map();
     document.querySelectorAll('.guest').forEach(guest => allGuestsMap.set(guest.dataset.name, guest));
-
     Object.keys(currentSeatingConfig).forEach(zoneId => {
         const zoneElement = document.getElementById(zoneId);
         if (zoneElement) {
@@ -173,7 +167,6 @@ function applySeatingPlan() {
             } else if (zoneElement.classList.contains('guest-list')) {
                 container = zoneElement.querySelector('.guest-container');
             }
-            
             if (container) {
                 currentSeatingConfig[zoneId].forEach(guestName => {
                     const guestElement = allGuestsMap.get(guestName);

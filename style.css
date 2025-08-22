@@ -103,3 +103,23 @@ h1 { color: #5d4037; }
 .table-guests-container { flex-grow: 1; }
 .is-dragging { opacity: 0.5; }
 .drag-over { border-color: #64b5f6; background-color: #e3f2fd; }
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    .header h1 {
+        font-size: 1.5em;
+    }
+    .main-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    .guest-list {
+        height: auto;
+        max-height: 45vh;
+    }
+    #tables-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
