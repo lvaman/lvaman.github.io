@@ -61,8 +61,8 @@ function renderGuestLists(groomGuests, brideGuests) {
     allGuestsData = { groom: groomGuests, bride: brideGuests };
     document.querySelectorAll('.guest').forEach(guestElement => guestElement.remove());
 
-    groomGuests.forEach((name, index) => groomListContainer.appendChild(createGuestElement('groom', name)));
-    brideGuests.forEach((name, index) => brideListContainer.appendChild(createGuestElement('bride', name)));
+    groomGuests.forEach((name) => groomListContainer.appendChild(createGuestElement('groom', name)));
+    brideGuests.forEach((name) => brideListContainer.appendChild(createGuestElement('bride', name)));
     
     applySeatingPlan();
     updateAllCounters();
@@ -86,6 +86,8 @@ function createGuestElement(type, name) {
 
     if (name === 'Long Vân' || name === 'Manal') {
         guestDiv.classList.add('vip-guest');
+    } else {
+        addDeleteButton(guestDiv);
     }
     return guestDiv;
 }
@@ -114,6 +116,9 @@ function returnGuestToList(guestElement) {
     const guestType = guestElement.classList.contains('groom') ? 'groom' : 'bride';
     const targetContainer = guestType === 'groom' ? groomListContainer : brideListContainer;
     targetContainer.appendChild(guestElement);
+    const oldButton = guestElement.querySelector('.return-guest-button');
+    if (oldButton) oldButton.remove();
+    addDeleteButton(guestElement);
     sortGuestsInContainer(targetContainer);
 
     const newSeatingConfig = buildSeatingConfigFromDOM();
@@ -133,8 +138,18 @@ function initializeDragAndDrop() {
             scrollSensitivity: 100,
             scrollSpeed: 20,
             onEnd: function (evt) {
+                const item = evt.item;
                 const destinationZone = evt.to.closest('.drop-zone');
-                if (destinationZone && destinationZone.classList.contains('guest-list')) {
+                const oldButton = item.querySelector('.delete-guest-button, .return-guest-button');
+                if(oldButton) oldButton.remove();
+
+                if (destinationZone.classList.contains('table-drop-zone')) {
+                    addReturnButton(item);
+                } else {
+                    addDeleteButton(item);
+                }
+
+                if (destinationZone.classList.contains('guest-list')) {
                     sortGuestsInContainer(evt.to);
                 }
                 const newSeatingConfig = buildSeatingConfigFromDOM();
@@ -200,22 +215,11 @@ function applySeatingPlan() {
             currentSeatingConfig[zoneId].forEach(guestName => {
                 const guestElement = allGuestsOnPage.get(guestName);
                 if (guestElement) {
-                    const oldButton = guestElement.querySelector('.delete-guest-button, .return-guest-button');
-                    if (oldButton) oldButton.remove();
-
-                    if (zoneElement.classList.contains('table-drop-zone')) {
-                        addReturnButton(guestElement);
-                    } else {
-                        addDeleteButton(guestElement);
-                    }
                     container.appendChild(guestElement);
                 }
             });
         }
     });
-
-    sortGuestsInContainer(groomListContainer);
-    sortGuestsInContainer(brideListContainer);
 }
 
 function updateAllCounters() {
