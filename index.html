@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de table</title>
+    <link rel="stylesheet" href="style.css">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPCMCi4BB2dySCc8G4adLYQXJSk-903v0",
+            authDomain: "weddingchart.firebaseapp.com",
+            projectId: "weddingchart",
+            storageBucket: "weddingchart.firebasestorage.app",
+            messagingSenderId: "345074315998",
+            appId: "1:345074315998:web:ae600053bcbe04a977884f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+
+        window.firebaseServices = {
+            db: getFirestore(app),
+            collection, doc, setDoc, onSnapshot,
+            updateDoc, arrayUnion, arrayRemove
+        };
+    </script>
+</head>
+<body>
+    <div id="app-container">
+        <div class="header">
+            <h1>Plan de table 👩‍❤️‍👨</h1>
+            <p>Invités placés: <span id="master-counter">0/0</span></p>
+        </div>
+
+        <div class="main-container">
+            <div id="groom-guests" class="guest-list drop-zone">
+                <h2>Long Vân<br><span id="groom-list-counter"></span></h2>
+                <div class="guest-container"></div>
+                <div class="add-guest-form">
+                    <input type="text" id="groom-guest-input" placeholder="Add new guest...">
+                    <button id="add-groom-guest-button">+</button>
+                </div>
+            </div>
+
+            <div id="bride-guests" class="guest-list drop-zone">
+                <h2>Manal<br><span id="bride-list-counter"></span></h2>
+                <div class="guest-container"></div>
+                <div class="add-guest-form">
+                    <input type="text" id="bride-guest-input" placeholder="Add new guest...">
+                    <button id="add-bride-guest-button">+</button>
+                </div>
+            </div>
+
+            <div id="tables-container"></div>
+        </div>
+    </div>
+
+    <script src="script.js" type="module"></script>
+</body>
+</html>
