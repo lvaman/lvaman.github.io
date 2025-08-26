@@ -156,8 +156,8 @@ h1 { color: #5d4037; font-size: 2.5rem; margin-bottom: 0.5rem; }
 
 #tables-container {
     display: grid;
-    /* Modification pour afficher 3 tables par ligne sur les grands écrans */
-    grid-template-columns: repeat(3, minmax(200px, 1fr)); 
+    /* Mise à jour pour 4 tables par ligne sur les grands écrans */
+    grid-template-columns: repeat(4, minmax(180px, 1fr)); 
     gap: 1.5rem;
     padding: 1rem;
     min-width: 0;
@@ -241,7 +241,8 @@ h1 { color: #5d4037; font-size: 2.5rem; margin-bottom: 0.5rem; }
         min-width: 0;
     }
     #tables-container { 
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        /* Réduit encore plus la largeur min pour s'adapter à des écrans étroits */
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 1rem;
         min-width: 0;
     }
