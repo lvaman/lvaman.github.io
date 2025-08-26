@@ -69,11 +69,17 @@ function renderGuestLists(groomGuests, brideGuests) {
 }
 
 function customGuestSort(a, b) {
-    const isVipA = a === 'Long Vân' || a === 'Manal';
-    const isVipB = b === 'Long Vân' || b === 'Manal';
+
+    const nameA = String(a);
+    const nameB = String(b);
+
+    const isVipA = nameA === 'Long Vân' || nameA === 'Manal';
+    const isVipB = nameB === 'Long Vân' || nameB === 'Manal';
+
     if (isVipA && !isVipB) return -1;
     if (!isVipA && isVipB) return 1;
-    return a.localeCompare(b);
+
+    return nameA.localeCompare(nameB);
 }
 
 function createGuestElement(type, name) {
